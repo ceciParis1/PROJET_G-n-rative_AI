@@ -16,16 +16,19 @@ api_key = st.text_input("Entrez votre clé API OpenAI :", type="password")
 if api_key:
     openai.api_key = api_key
 
-# Fonction pour générer un poème à l'aide d'OpenAI (GPT-3 ou GPT-4)
+# Fonction pour générer un poème à l'aide d'OpenAI
 def generate_poem(theme, length, style):
     try:
-        prompt = f"Créez un poème sur le thème '{theme}', avec un style {style} et une longueur {length}."
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # Vous pouvez utiliser "gpt-4" si disponible
-            prompt=prompt,
+        # Utilisation de la nouvelle interface ChatCompletion
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Utiliser "gpt-4" si disponible
+            messages=[
+                {"role": "system", "content": "You are a poet."},
+                {"role": "user", "content": f"Créez un poème sur le thème '{theme}', en style {style}, et d'une longueur {length}."}
+            ],
             max_tokens=150  # Ajustez en fonction de la longueur du poème
         )
-        return response.choices[0].text.strip()
+        return response['choices'][0]['message']['content'].strip()
     except Exception as e:
         return f"Erreur lors de la génération : {str(e)}"
 
