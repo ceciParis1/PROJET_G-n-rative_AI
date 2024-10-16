@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# API keys and secrets
+*.env
+.env
+
+# Virtual environment folders
+env/
+venv/
+
+# Streamlit Cache
+.streamlit/
