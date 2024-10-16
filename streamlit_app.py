@@ -87,7 +87,7 @@ def generate_poem(theme, length, style, api_key, poems):
 with st.sidebar:
     st.title("Customize Your Poem")
     theme = st.text_input("Theme (e.g., love, nature, melancholy)")
-    length = st.selectbox("Length", ["short", medium", "long"])
+    length = st.selectbox("Length", ["short", "medium", "long"])
     style = st.selectbox("Style", ["free verse", "sonnet", "haiku", "limerick"])
 
     if st.button("Generate Poem") and api_key:
