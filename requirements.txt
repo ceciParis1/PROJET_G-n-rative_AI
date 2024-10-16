@@ -5,3 +5,5 @@ chromadb>=0.3.21  # Use Chroma instead of faiss-cpu
 google-generativeai
 langchain_google_genai
 PyPDF2  # Optional, only if needed for PDF processing
+langchain-community
+
