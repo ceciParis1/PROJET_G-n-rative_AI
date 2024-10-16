@@ -33,7 +33,9 @@ def fetch_poems_from_api(theme):
 # Fonction pour générer des embeddings et les stocker dans Chroma
 def create_vector_store(poems, api_key):
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-    embeddings = embeddings_model.embed([poem['lines'][0] for poem in poems])  # Utiliser 'embed' au lieu de 'embed_texts'
+    
+    # Utilisation de embed_documents pour les poèmes
+    embeddings = embeddings_model.embed_documents([poem['lines'][0] for poem in poems])
 
     # Initialiser le magasin de vecteurs Chroma
     vector_store = Chroma.from_texts([poem['lines'][0] for poem in poems], embeddings)
@@ -43,7 +45,9 @@ def create_vector_store(poems, api_key):
 # Fonction pour récupérer des poèmes similaires avec Chroma
 def retrieve_similar_poems(user_input, api_key, vector_store):
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-    user_embedding = embeddings_model.embed(user_input)  # Assurez-vous que cette méthode existe
+    
+    # Utilisation de embed_query pour une requête unique
+    user_embedding = embeddings_model.embed_query(user_input)
 
     similar_poems = vector_store.similarity_search(user_input, k=5)
     return similar_poems
