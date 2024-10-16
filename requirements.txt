@@ -3,4 +3,5 @@ requests
 langchain>=0.0.200
 chromadb>=0.3.21  # Utiliser Chroma au lieu de faiss-cpu
 openai==0.28  # Bibliothèque OpenAI pour les appels API
+langchain-community
 PyPDF2  # Optionnel, uniquement si vous avez besoin du traitement des PDF
