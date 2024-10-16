@@ -1,7 +1,6 @@
 streamlit
 requests
 langchain
-faiss-cpu
 google-generativeai
-faiss-cpu
+faiss-cpu==1.7.2
 langchain
