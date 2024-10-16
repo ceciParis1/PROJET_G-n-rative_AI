@@ -4,62 +4,62 @@ from langchain.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 
-# Set up the Streamlit page
-st.set_page_config(page_title="Poem Generator", layout="wide")
+# Configurer la page Streamlit
+st.set_page_config(page_title="Générateur de Poèmes", layout="wide")
 
 st.markdown("""
-## Poem Generator: Create Personalized Poems with AI
-Choose the theme, style, and length, and let the AI generate beautiful verses for you!
+## Générateur de Poèmes : Créez des poèmes personnalisés avec l'IA
+Choisissez un thème, un style et une longueur, et laissez l'IA générer de magnifiques vers pour vous !
 """)
 
-# PoetryDB API endpoint
+# URL de l'API PoetryDB
 POETRYDB_API = "https://poetrydb.org"
 
-# Get the API key from the user
-api_key = st.text_input("Enter your Google API Key:", type="password", key="api_key_input")
+# Récupérer la clé API de l'utilisateur
+api_key = st.text_input("Entrez votre clé API Google :", type="password", key="api_key_input")
 
-# Function to fetch poems from PoetryDB API
+# Fonction pour récupérer les poèmes via l'API PoetryDB
 def fetch_poems_from_api(theme):
     try:
         response = requests.get(f"{POETRYDB_API}/lines/{theme}")
         if response.status_code == 200:
-            return response.json()  # Return poem data
+            return response.json()  # Retourne les données des poèmes
         else:
             return None
     except Exception as e:
-        st.error(f"Error fetching poems: {str(e)}")
+        st.error(f"Erreur lors de la récupération des poèmes : {str(e)}")
         return None
 
-# Function to generate embeddings and store them in Chroma
+# Fonction pour générer des embeddings et les stocker dans Chroma
 def create_vector_store(poems, api_key):
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-    embeddings = embeddings_model.embed_texts([poem['lines'][0] for poem in poems])
+    embeddings = embeddings_model.embed([poem['lines'][0] for poem in poems])  # Utiliser 'embed' au lieu de 'embed_texts'
 
-    # Initialize Chroma vector store
+    # Initialiser le magasin de vecteurs Chroma
     vector_store = Chroma.from_texts([poem['lines'][0] for poem in poems], embeddings)
 
     return vector_store
 
-# Function to retrieve similar poems using Chroma
+# Fonction pour récupérer des poèmes similaires avec Chroma
 def retrieve_similar_poems(user_input, api_key, vector_store):
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-    user_embedding = embeddings_model.embed_text(user_input)
+    user_embedding = embeddings_model.embed(user_input)  # Assurez-vous que cette méthode existe
 
     similar_poems = vector_store.similarity_search(user_input, k=5)
     return similar_poems
 
-# Function to generate a new poem inspired by existing poems
+# Fonction pour générer un nouveau poème inspiré des poèmes existants
 def generate_poem(theme, length, style, api_key, poems):
     if poems:
         model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7, google_api_key=api_key)
-        poem_texts = "\n\n".join([p['lines'][0:5] for p in poems])  # Use first 5 lines of each poem as inspiration
+        poem_texts = "\n\n".join([p['lines'][0] for p in poems])  # Utiliser la première ligne de chaque poème comme inspiration
         
         prompt_template = """
-        Create a poem with the following details:
-        - Theme: {theme}
-        - Style: {style}
-        - Length: {length}
-        Use this context of existing poetry to inspire your poem:
+        Créez un poème avec les détails suivants :
+        - Thème : {theme}
+        - Style : {style}
+        - Longueur : {length}
+        Utilisez ce contexte de poésie existante pour inspirer votre poème :
         {poem_texts}
         """
         prompt = PromptTemplate(template=prompt_template, input_variables=["theme", "style", "length", "poem_texts"])
@@ -73,20 +73,20 @@ def generate_poem(theme, length, style, api_key, poems):
         })
         return new_poem
 
-# Sidebar for user input
+# Barre latérale pour l'entrée utilisateur
 with st.sidebar:
-    st.title("Customize Your Poem")
-    theme = st.text_input("Theme (e.g., love, nature, melancholy)")
-    length = st.selectbox("Length", ["short", "medium", "long"])
-    style = st.selectbox("Style", ["free verse", "sonnet", "haiku", "limerick"])
+    st.title("Personnalisez votre poème")
+    theme = st.text_input("Thème (ex : amour, nature, mélancolie)")
+    length = st.selectbox("Longueur", ["court", "moyen", "long"])
+    style = st.selectbox("Style", ["vers libres", "sonnet", "haïku", "limerick"])
 
-    if st.button("Generate Poem") and api_key:
-        with st.spinner("Fetching poems and generating your custom poem..."):
+    if st.button("Générer un poème") and api_key:
+        with st.spinner("Récupération des poèmes et génération de votre poème personnalisé..."):
             poems = fetch_poems_from_api(theme)
             if poems:
                 vector_store = create_vector_store(poems, api_key)
                 generated_poem = generate_poem(theme, length, style, api_key, poems)
-                st.success("Your poem is ready!")
+                st.success("Votre poème est prêt !")
                 st.write(generated_poem)
             else:
-                st.error("No poems found for the selected theme.")
+                st.error("Aucun poème trouvé pour le thème sélectionné.")
