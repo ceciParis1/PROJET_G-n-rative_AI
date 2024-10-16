@@ -1,6 +1,7 @@
 streamlit
 requests
 langchain
+chromadb  # Use Chroma instead of faiss-cpu
 google-generativeai
-faiss-cpu==1.7.2
-langchain
+langchain_google_genai
+PyPDF2  # Optional, only if needed for PDF processing

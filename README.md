@@ -1,4 +1,4 @@
-# Poem Generator Using RAG Framework
+# Poem Generator Using RAG Framework (Chroma Version)
 
 This application uses the **PoetryDB API** to fetch existing poems as inspiration and **Google's Generative AI** to create new, custom poems based on user inputs such as theme, length, and style. The AI generates poems that are inspired by famous poems but does not copy them directly.
 
@@ -7,6 +7,7 @@ This application uses the **PoetryDB API** to fetch existing poems as inspiratio
 - **Custom Poem Generation**: Choose a theme (e.g., love, nature), a style (e.g., sonnet, haiku), and a length, and the AI generates a new poem for you.
 - **Poetry Database**: Uses the PoetryDB API to retrieve famous poems and uses them as inspiration.
 - **Generative AI**: Leverages Google Generative AI models for creative poem generation.
+- **Vector Store**: Uses Chroma for vector similarity search (instead of FAISS).
 
 ## How to Run
 

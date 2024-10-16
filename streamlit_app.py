@@ -1,12 +1,10 @@
 import streamlit as st
 import requests
-import faiss
-import numpy as np
-from langchain.vectorstores import FAISS
+from langchain.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 
-# Set up Streamlit page
+# Set up the Streamlit page
 st.set_page_config(page_title="Poem Generator", layout="wide")
 
 st.markdown("""
@@ -32,37 +30,29 @@ def fetch_poems_from_api(theme):
         st.error(f"Error fetching poems: {str(e)}")
         return None
 
-# Function to generate embeddings and store them in FAISS
+# Function to generate embeddings and store them in Chroma
 def create_vector_store(poems, api_key):
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-    
-    # Get embeddings for each poem
-    poem_embeddings = embeddings_model.embed_texts([poem['lines'][0] for poem in poems])
+    embeddings = embeddings_model.embed_texts([poem['lines'][0] for poem in poems])
 
-    # Create FAISS index
-    dimension = len(poem_embeddings[0])
-    index = faiss.IndexFlatL2(dimension)
-    
-    # Add embeddings to the index
-    index.add(np.array(poem_embeddings))
-    
-    # Save the index to disk
-    faiss.write_index(index, 'poem_faiss_index')
+    # Initialize Chroma vector store
+    vector_store = Chroma.from_texts([poem['lines'][0] for poem in poems], embeddings)
 
-# Function to load FAISS index and retrieve similar poems
-def retrieve_similar_poems(user_input, api_key):
-    index = faiss.read_index('poem_faiss_index')
+    return vector_store
+
+# Function to retrieve similar poems using Chroma
+def retrieve_similar_poems(user_input, api_key, vector_store):
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
     user_embedding = embeddings_model.embed_text(user_input)
 
-    D, I = index.search(np.array([user_embedding]), k=5)  # Retrieve 5 closest poems
-    return I
+    similar_poems = vector_store.similarity_search(user_input, k=5)
+    return similar_poems
 
 # Function to generate a new poem inspired by existing poems
 def generate_poem(theme, length, style, api_key, poems):
     if poems:
         model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7, google_api_key=api_key)
-        poem_texts = "\n\n".join([p['lines'][0:5] for p in poems])  # First 5 lines of each poem as inspiration
+        poem_texts = "\n\n".join([p['lines'][0:5] for p in poems])  # Use first 5 lines of each poem as inspiration
         
         prompt_template = """
         Create a poem with the following details:
@@ -94,7 +84,7 @@ with st.sidebar:
         with st.spinner("Fetching poems and generating your custom poem..."):
             poems = fetch_poems_from_api(theme)
             if poems:
-                create_vector_store(poems, api_key)
+                vector_store = create_vector_store(poems, api_key)
                 generated_poem = generate_poem(theme, length, style, api_key, poems)
                 st.success("Your poem is ready!")
                 st.write(generated_poem)
